@@ -46,6 +46,14 @@ for labels, dataset in data.items():
   train_dataset.append(dataset)
   train_labels.append(labels)
 
+file = open('data.txt', 'r')
+tmp_dataset = file.readlines()
+test_dataset = []
+
+for name in tmp_dataset:
+  test_dataset.append(name.rstrip())
+
+test_dataset = to_dense(test_dataset)
 
 estimator.fit(train_dataset, train_labels)
-print(estimator.predict(to_dense(['親子丼', '卵焼き', '天ぷら', '生姜焼き'])))
+print(estimator.predict(test_dataset))
