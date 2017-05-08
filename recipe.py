@@ -1,4 +1,3 @@
-# coding=UTF-8
 import csv
 import numpy as np
 import MeCab
@@ -6,6 +5,18 @@ import random
 import copy
 from gensim import corpora, matutils
 from sklearn.ensemble import RandomForestClassifier
+
+CATEGORY = {
+  'japanese': 1,
+  'western':  2,
+  'chinese':  3,
+  'french':   4,
+  'italian':  5,
+  'spanish':  6,
+  'asian':    7,
+  'ethnic':   8,
+  'dessert':  9
+}
 
 def to_dense(data):
   tmp = dictionary.doc2bow(data)
@@ -15,15 +26,15 @@ def read_from_csv():
   with open('recipes_view.csv') as csvfile:
     recipes = csv.DictReader(csvfile)
     data = {
-      1: [],
-      2: [],
-      3: [],
-      4: [],
-      5: [],
-      6: [],
-      7: [],
-      8: [],
-      9: []
+      CATEGORY['japanese']: [],
+      CATEGORY['western']:  [],
+      CATEGORY['chinese']:  [],
+      CATEGORY['french']:   [],
+      CATEGORY['italian']:  [],
+      CATEGORY['spanish']:  [],
+      CATEGORY['asian']:    [],
+      CATEGORY['ethnic']:   [],
+      CATEGORY['dessert']: []
     };
     for row in recipes:
       data[int(row['recipe_kind_id'])].append(row['name'])
@@ -34,26 +45,35 @@ def read_from_csv():
 dictionary = corpora.Dictionary.load_from_text('recipe_dictionary.txt')
 data       = read_from_csv();
 
-for recipe_kind in data:
-  data[recipe_kind] = to_dense(data[recipe_kind])
-
 estimator = RandomForestClassifier()
 
 train_dataset = []
 train_labels  = []
 
-for labels, dataset in data.items():
-  train_dataset.append(dataset)
-  train_labels.append(labels)
+for label, dataset in data.items():
+  for _ in range(0, 10):
+    train_dataset.append(to_dense(random.sample(dataset, 20)))
+    train_labels.append(label)
 
-file = open('data.txt', 'r')
+file = open('test_italian.txt', 'r')
 tmp_dataset = file.readlines()
-test_dataset = []
+all_test_dataset = []
+test_dataset     = []
+test_labels      = []
 
 for name in tmp_dataset:
-  test_dataset.append(name.rstrip())
+  all_test_dataset.append(name.rstrip())
 
-test_dataset = to_dense(test_dataset)
+for label, dataset in data.items():
+  for _ in range(0, 10):
+    test_dataset.append(to_dense(random.sample(dataset, 20)))
+    test_labels.append(label)
+
+for _ in range(0, 2):
+  test_dataset.append(to_dense(random.sample(all_test_dataset, 20)))
+  test_labels.append(CATEGORY['italian'])
 
 estimator.fit(train_dataset, train_labels)
+
+print(estimator.score(test_dataset, test_labels))
 print(estimator.predict(test_dataset))
